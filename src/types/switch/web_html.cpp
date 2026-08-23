@@ -45,6 +45,23 @@ void append_switch_fields_html(String& html, const String& tab_id, const std::ve
   html += R"html(</option>
               </select>
 )html";
+  html += R"html(              <label>)html";
+  html += tr.switch_active_appearance;
+  html += R"html(</label>
+              <select id=")html";
+  html += tab_id;
+  html += R"html(_switch_active_style">
+                <option value="0">)html";
+  html += tr.switch_active_icon_only;
+  html += R"html(</option>
+                <option value="1">)html";
+  html += tr.switch_active_border;
+  html += R"html(</option>
+                <option value="2">)html";
+  html += tr.switch_active_background;
+  html += R"html(</option>
+              </select>
+)html";
   if (tab_id != "screensaver") {
     html += R"html(              <label>)html";
     html += tr.popup_open;

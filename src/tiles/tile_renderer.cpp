@@ -328,6 +328,7 @@ static void clear_switch_widgets(GridType grid_type) {
     state_target = g_tab2_switch_states;
   }
   for (size_t i = 0; i < TILES_PER_GRID; ++i) {
+    target[i].container = nullptr;
     target[i].icon_label = nullptr;
     target[i].title_label = nullptr;
     target[i].switch_obj = nullptr;
@@ -1212,6 +1213,10 @@ static bool is_switch_widget_style(const Tile& tile) {
   return tile.sensor_decimals == 1;
 }
 
+static uint8_t switch_active_style(const Tile& tile) {
+  return tile.sensor_value_font <= 2 ? tile.sensor_value_font : 0;
+}
+
 static LightPopupInit build_popup_init_from_state(
     GridType grid_type,
     uint8_t tile_index,
@@ -1727,16 +1732,41 @@ void update_switch_tile_state(GridType grid_type, uint8_t grid_index, const char
   }
 
   SwitchTileWidgets& widgets = target[grid_index];
-  if (!widgets.icon_label && !widgets.title_label && !widgets.switch_obj) return;
+  if (!widgets.container && !widgets.icon_label && !widgets.title_label &&
+      !widgets.switch_obj) return;
 
   static const uint32_t kIconOn = 0xFFD54F;
   static const uint32_t kIconOff = 0xB0B0B0;
   static const uint32_t kIconNeutral = 0xFFFFFF;
   static const uint32_t kSwitchOff = 0xFFFFFF;
   static const uint32_t kSwitchOn = 0x3B82F6;
+  static const uint32_t kActiveAccent = 0x26A69A;
 
   const bool light_unavailable =
       is_light_entity && !state.available;
+  const bool active = !light_unavailable && state.has_state && state.is_on;
+  const uint8_t active_style = switch_active_style(tile);
+
+  if (widgets.container) {
+    const uint32_t normal_bg = tileBgColorOrDefault(tile, 0x2A2A2A);
+    const uint32_t current_bg =
+        (active && active_style == 2) ? kActiveAccent : normal_bg;
+    const lv_coord_t border_width =
+        (active && active_style == 1) ? tile_layout::scale_480(4) : 0;
+    lv_obj_set_style_bg_color(
+        widgets.container, lv_color_hex(current_bg),
+        LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_color(
+        widgets.container, lv_color_hex(current_bg),
+        LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_dir(
+        widgets.container, LV_GRAD_DIR_NONE,
+        LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(
+        widgets.container, lv_color_hex(kActiveAccent), LV_PART_MAIN);
+    lv_obj_set_style_border_width(
+        widgets.container, border_width, LV_PART_MAIN);
+  }
   uint32_t icon_color = kIconOff;
   if (!light_unavailable && (!state.has_state || state.is_on)) {
     if (state.supports_temperature && !state.supports_color && state.has_color_temp) {
@@ -1751,10 +1781,12 @@ void update_switch_tile_state(GridType grid_type, uint8_t grid_index, const char
     }
   }
 
-  uint32_t label_color =
-      light_unavailable
-          ? kIconOff
-          : (use_switch_widget ? kIconNeutral : icon_color);
+  uint32_t label_color = light_unavailable
+                             ? kIconOff
+                             : ((use_switch_widget ||
+                                 (active && active_style != 0))
+                                    ? kIconNeutral
+                                    : icon_color);
   lv_color_t lv_color = lv_color_hex(label_color);
   if (widgets.icon_label) {
     lv_obj_set_style_text_color(widgets.icon_label, lv_color, 0);

@@ -167,6 +167,10 @@ struct Strings {
   const char* switch_display;
   const char* switch_icon_button;
   const char* switch_lvgl_switch;
+  const char* switch_active_appearance;
+  const char* switch_active_icon_only;
+  const char* switch_active_border;
+  const char* switch_active_background;
   const char* media_entity;
   const char* show_time;
   const char* show_date;

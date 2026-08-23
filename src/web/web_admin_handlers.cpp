@@ -2576,6 +2576,10 @@ void WebAdminServer::handleGetTiles() {
     out += String(getTilePopupOpenMode(tile));
     out += ",\"switch_style\":";
     out += String((tile.type == TILE_SWITCH && tile.sensor_decimals == 1) ? 1 : 0);
+    out += ",\"switch_active_style\":";
+    out += String((tile.type == TILE_SWITCH && tile.sensor_value_font <= 2)
+                      ? tile.sensor_value_font
+                      : 0);
     out += ",\"navigate_target\":";
     out += String((tile.type == TILE_FOLDER) ? getNavigateTargetId(tile) : 0);
     // Der Editor sperrt den Typwechsel fuer nicht-leere Ordner (Inhalt wuerde

@@ -25,6 +25,7 @@ struct SensorTileWidgets {
 };
 
 struct SwitchTileWidgets {
+  lv_obj_t* container = nullptr;
   lv_obj_t* icon_label = nullptr;
   lv_obj_t* title_label = nullptr;
   lv_obj_t* switch_obj = nullptr;

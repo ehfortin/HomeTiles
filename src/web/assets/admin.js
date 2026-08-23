@@ -1801,7 +1801,7 @@ function t(key) {
     const prev = tiles[index] || {};
     const tile = Object.assign({}, prev);
     const layout = normalizeSnapshotLayout(snapshot, index, tab);
-    const numericFields = ['type', 'sensor_decimals', 'sensor_value_font', 'sensor_display_mode', 'sensor_gauge_min', 'sensor_gauge_max', 'switch_style', 'navigate_target', 'popup_open_mode', 'key_code', 'key_modifier', 'background_opacity'];
+    const numericFields = ['type', 'sensor_decimals', 'sensor_value_font', 'sensor_display_mode', 'sensor_gauge_min', 'sensor_gauge_max', 'switch_style', 'switch_active_style', 'navigate_target', 'popup_open_mode', 'key_code', 'key_modifier', 'background_opacity'];
 
     tile.type = clampInt(snapshot?.type, 0, 255, Number(prev.type) || 0);
     tile.title = snapshot?.title || '';
@@ -2976,6 +2976,7 @@ function t(key) {
     const folderPinApply = document.getElementById(prefix + '_folder_pin_apply');
     const switchSelect = document.getElementById(prefix + '_switch_entity');
     const switchStyleSelect = document.getElementById(prefix + '_switch_style');
+    const switchActiveStyleSelect = document.getElementById(prefix + '_switch_active_style');
     const switchPopupModeSelect = document.getElementById(prefix + '_switch_popup_open_mode');
     const mediaSelect = document.getElementById(prefix + '_media_entity');
     const climateSelect = document.getElementById(prefix + '_climate_entity');
@@ -3086,6 +3087,7 @@ function t(key) {
     });
     bindLive(switchSelect, 'change', 'switchEntity', () => { maybeFillTitleFromSwitch(tab); updateTilePreview(tab); updateDraft(tab); scheduleAutoSave(tab); });
     bindLive(switchStyleSelect, 'change', 'switchStyle', () => { updateTilePreview(tab); updateDraft(tab); scheduleAutoSave(tab); });
+    bindLive(switchActiveStyleSelect, 'change', 'switchActiveStyle', () => { updateTilePreview(tab); updateDraft(tab); scheduleAutoSave(tab); });
     bindLive(switchPopupModeSelect, 'change', 'switchPopupMode', () => { updateDraft(tab); scheduleAutoSave(tab); });
     bindLive(mediaSelect, 'change', 'mediaEntity', () => { maybeFillTitleFromMedia(tab); updateTilePreview(tab); updateMediaValuePreview(tab); updateDraft(tab); scheduleAutoSave(tab); });
     bindLive(climateSelect, 'change', 'climateEntity', () => {
@@ -3235,6 +3237,7 @@ function t(key) {
     const meta = getTileTypeMeta(type);
     const iconInput = document.getElementById(prefix + '_tile_icon');
     const switchStyle = document.getElementById(prefix + '_switch_style')?.value || '0';
+    const switchActiveStyle = document.getElementById(prefix + '_switch_active_style')?.value || '0';
     const isEnergyType = type === '14';
     const sensorValueFont = isEnergyType
       ? (document.getElementById(prefix + '_energy_value_font')?.value || '0')
@@ -3295,6 +3298,8 @@ function t(key) {
     if (type === '5' && switchStyle === '1') tileElem.classList.add('switch-toggle');
     tileElem.style.background = '';
     tileElem.dataset.type = type;
+    if (type === '5') tileElem.dataset.switchActiveStyle = switchActiveStyle;
+    else delete tileElem.dataset.switchActiveStyle;
 
     if (type === '0') {
       tileElem.classList.add('empty');
@@ -4312,6 +4317,11 @@ function t(key) {
         ? tile.switch_style
         : (tile.sensor_decimals === 1 ? 1 : 0);
       fd.append('switch_style', style);
+      const activeStyle = (tile.switch_active_style !== undefined && tile.switch_active_style !== null)
+        ? tile.switch_active_style
+        : ((Number(tile.sensor_value_font) >= 0 && Number(tile.sensor_value_font) <= 2)
+          ? tile.sensor_value_font : 0);
+      fd.append('switch_active_style', activeStyle);
       if (tile.popup_open_mode !== undefined && tile.popup_open_mode !== null) {
         fd.append('popup_open_mode', tile.popup_open_mode);
       }
@@ -4474,6 +4484,13 @@ function t(key) {
     if (typeValue === '0' && (!meta.css || meta.css !== 'empty')) cls.push('empty');
     el.className = cls.join(' ');
     el.dataset.type = typeValue;
+    if (typeValue === '5') {
+      const activeStyle = tile.switch_active_style !== undefined && tile.switch_active_style !== null
+        ? tile.switch_active_style : tile.sensor_value_font;
+      el.dataset.switchActiveStyle = String(clampInt(activeStyle, 0, 2, 0));
+    } else {
+      delete el.dataset.switchActiveStyle;
+    }
     if (typeValue === '4') el.dataset.navigateTarget = String(tile.navigate_target || 0);
     else delete el.dataset.navigateTarget;
     if (typeValue === '0') el.style.background = 'transparent';
@@ -7573,8 +7590,15 @@ function maybeFillTitleFromSwitch(tab) {
     const iconEl = tileElem.querySelector('.tile-icon');
     const switchEl = tileElem.querySelector('.tile-switch');
     const isToggleStyle = tileElem.classList.contains('switch-toggle');
+    const activeStyle = clampInt(tileElem.dataset.switchActiveStyle, 0, 2, 0);
+    const setActiveAppearance = (isOn) => {
+      tileElem.classList.toggle('switch-active-on', isOn && activeStyle !== 0);
+      tileElem.classList.toggle('switch-active-border', activeStyle === 1);
+      tileElem.classList.toggle('switch-active-background', activeStyle === 2);
+    };
     syncSwitchPreviewPalette(tileElem);
     if (state.available === false) {
+      setActiveAppearance(false);
       if (iconEl) iconEl.style.color = SWITCH_ICON_OFF;
       if (switchEl) {
         switchEl.classList.remove('is-on');
@@ -7587,13 +7611,18 @@ function maybeFillTitleFromSwitch(tab) {
       return;
     }
     if (!state.hasState && !state.hasColor) {
+      setActiveAppearance(false);
       if (iconEl && isToggleStyle) iconEl.style.color = SWITCH_ICON_NEUTRAL;
       return;
     }
     let isOn = state.hasState ? state.isOn : state.hasColor;
+    setActiveAppearance(isOn);
     let color = SWITCH_ICON_OFF;
     if (isOn) color = state.hasColor ? state.color : SWITCH_ICON_ON;
-    if (iconEl) iconEl.style.color = isToggleStyle ? SWITCH_ICON_NEUTRAL : color;
+    if (iconEl) {
+      iconEl.style.color = (isToggleStyle || (isOn && activeStyle !== 0))
+        ? SWITCH_ICON_NEUTRAL : color;
+    }
     if (switchEl) {
       if (isOn) switchEl.classList.add('is-on');
       else switchEl.classList.remove('is-on');
@@ -7635,6 +7664,12 @@ function maybeFillTitleFromSwitch(tab) {
     if (styleEl) {
       styleEl.value = (data.switch_style !== undefined && data.switch_style !== null) ? String(data.switch_style) : '0';
     }
+    const activeStyleEl = document.getElementById(prefix + '_switch_active_style');
+    if (activeStyleEl) {
+      const activeStyle = (data.switch_active_style !== undefined && data.switch_active_style !== null)
+        ? data.switch_active_style : data.sensor_value_font;
+      activeStyleEl.value = String(clampInt(activeStyle, 0, 2, 0));
+    }
     const popupModeEl = document.getElementById(prefix + '_switch_popup_open_mode');
     if (popupModeEl) {
       popupModeEl.value = (data.popup_open_mode !== undefined) ? String(data.popup_open_mode) : '1';
@@ -7647,6 +7682,8 @@ function maybeFillTitleFromSwitch(tab) {
     formData.append('switch_entity', document.getElementById(prefix + '_switch_entity')?.value || '');
     const styleEl = document.getElementById(prefix + '_switch_style');
     formData.append('switch_style', styleEl ? styleEl.value : '0');
+    const activeStyleEl = document.getElementById(prefix + '_switch_active_style');
+    formData.append('switch_active_style', activeStyleEl ? activeStyleEl.value : '0');
     formData.append('popup_open_mode', document.getElementById(prefix + '_switch_popup_open_mode')?.value || '1');
   }
 
@@ -7656,6 +7693,8 @@ function maybeFillTitleFromSwitch(tab) {
     if (entityEl) entityEl.value = '';
     const styleEl = document.getElementById(prefix + '_switch_style');
     if (styleEl) styleEl.value = '0';
+    const activeStyleEl = document.getElementById(prefix + '_switch_active_style');
+    if (activeStyleEl) activeStyleEl.value = '0';
     const popupModeEl = document.getElementById(prefix + '_switch_popup_open_mode');
     if (popupModeEl) popupModeEl.value = '1';
   }
