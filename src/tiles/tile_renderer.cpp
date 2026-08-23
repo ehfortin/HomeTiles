@@ -1736,7 +1736,6 @@ void update_switch_tile_state(GridType grid_type, uint8_t grid_index, const char
   static const uint32_t kIconNeutral = 0xFFFFFF;
   static const uint32_t kSwitchOff = 0xFFFFFF;
   static const uint32_t kSwitchOn = 0x3B82F6;
-  static const uint32_t kActiveBorder = 0xFFD54F;
 
   const bool light_unavailable =
       is_light_entity && !state.available;
@@ -1766,27 +1765,13 @@ void update_switch_tile_state(GridType grid_type, uint8_t grid_index, const char
   }
 
   if (widgets.container) {
-    const uint32_t tile_color = tileBgColorOrDefault(tile, 0x2A2A2A);
     const bool tile_active =
         !light_unavailable && state.has_state && state.is_on;
-    const uint32_t background_color =
-        tile_active ? brighten_rgb_color(tile_color, 0x12) : tile_color;
-
-    lv_obj_set_style_bg_color(
-        widgets.container, lv_color_hex(background_color),
-        LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_grad_color(
-        widgets.container, lv_color_hex(background_color),
-        LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(
-        widgets.container, lv_color_hex(kActiveBorder), LV_PART_MAIN);
-    lv_obj_set_style_border_opa(
-        widgets.container, tile_active ? LV_OPA_COVER : LV_OPA_TRANSP,
-        LV_PART_MAIN);
-    lv_obj_set_style_border_width(
-        widgets.container,
-        tile_active ? tile_layout::scale_480(4) : 0,
-        LV_PART_MAIN);
+    if (tile_active) {
+      lv_obj_add_state(widgets.container, LV_STATE_CHECKED);
+    } else {
+      lv_obj_remove_state(widgets.container, LV_STATE_CHECKED);
+    }
   }
 
   if (widgets.switch_obj) {

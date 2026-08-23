@@ -8,10 +8,11 @@ const required = [
   [header, 'lv_obj_t* container = nullptr;'],
   [switchRenderer, 'target[index].container = container;'],
   [renderer, 'state.has_state && state.is_on'],
-  [renderer, 'brighten_rgb_color(tile_color, 0x12)'],
-  [renderer, 'lv_obj_set_style_border_color('],
-  [renderer, 'tile_active ? LV_OPA_COVER : LV_OPA_TRANSP'],
-  [renderer, 'tile_active ? tile_layout::scale_480(4) : 0'],
+  [switchRenderer, 'brighten_rgb_color(tile_color, 0x12)'],
+  [switchRenderer, 'LV_PART_MAIN | LV_STATE_CHECKED'],
+  [switchRenderer, 'lv_obj_set_style_border_color('],
+  [renderer, 'lv_obj_add_state(widgets.container, LV_STATE_CHECKED)'],
+  [renderer, 'lv_obj_remove_state(widgets.container, LV_STATE_CHECKED)'],
 ];
 
 for (const [source, snippet] of required) {

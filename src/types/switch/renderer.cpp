@@ -131,6 +131,29 @@ lv_obj_t* render_switch_tile(lv_obj_t* parent, int col, int row, const Tile& til
 lv_obj_set_style_bg_grad_color(container, lv_color_hex(tile_color), LV_PART_MAIN | LV_STATE_DEFAULT);
 lv_obj_set_style_bg_grad_dir(container, LV_GRAD_DIR_NONE, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+  // A Switch tile keeps its active appearance through LVGL's CHECKED state.
+  // Defining the style here avoids transient press/focus styles replacing a
+  // manually applied border after Home Assistant confirms another tile.
+  const uint32_t active_tile_color = brighten_rgb_color(tile_color, 0x12);
+  lv_obj_set_style_bg_color(
+      container, lv_color_hex(active_tile_color),
+      LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_set_style_bg_grad_color(
+      container, lv_color_hex(active_tile_color),
+      LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_set_style_bg_grad_dir(
+      container, LV_GRAD_DIR_NONE,
+      LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_set_style_border_color(
+      container, lv_color_hex(0xFFD54F),
+      LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_set_style_border_opa(
+      container, LV_OPA_COVER,
+      LV_PART_MAIN | LV_STATE_CHECKED);
+  lv_obj_set_style_border_width(
+      container, tile_layout::scale_480(4),
+      LV_PART_MAIN | LV_STATE_CHECKED);
+
   if (!use_switch_widget) {
     // Pressed-State: 10% heller
     uint32_t pressed_color = brighten_rgb_color(tile_color, 0x10);
