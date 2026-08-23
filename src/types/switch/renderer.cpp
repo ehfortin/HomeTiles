@@ -232,6 +232,7 @@ lv_obj_set_style_bg_grad_dir(container, LV_GRAD_DIR_NONE, LV_PART_MAIN | LV_STAT
 
   SwitchTileWidgets* target = tile_renderer_get_switch_widgets(grid_type);
   if (target && index < TILES_PER_GRID) {
+    target[index].container = container;
     target[index].icon_label = icon_lbl;
     target[index].title_label = title_lbl;
     target[index].switch_obj = switch_obj;

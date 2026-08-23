@@ -69,6 +69,10 @@ if ($LASTEXITCODE -ne 0) {
 if ($LASTEXITCODE -ne 0) {
     throw 'New device profile integration contract test failed.'
 }
+& $node.Source (Join-Path $PSScriptRoot 'test-switch-active-highlight.mjs')
+if ($LASTEXITCODE -ne 0) {
+    throw 'Active Switch tile highlight contract test failed.'
+}
 
 $defines = @{
     tab5 = 'DEVICE_M5STACKS_TAB5'

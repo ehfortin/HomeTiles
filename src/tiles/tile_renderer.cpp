@@ -328,6 +328,7 @@ static void clear_switch_widgets(GridType grid_type) {
     state_target = g_tab2_switch_states;
   }
   for (size_t i = 0; i < TILES_PER_GRID; ++i) {
+    target[i].container = nullptr;
     target[i].icon_label = nullptr;
     target[i].title_label = nullptr;
     target[i].switch_obj = nullptr;
@@ -1727,13 +1728,15 @@ void update_switch_tile_state(GridType grid_type, uint8_t grid_index, const char
   }
 
   SwitchTileWidgets& widgets = target[grid_index];
-  if (!widgets.icon_label && !widgets.title_label && !widgets.switch_obj) return;
+  if (!widgets.container && !widgets.icon_label && !widgets.title_label &&
+      !widgets.switch_obj) return;
 
   static const uint32_t kIconOn = 0xFFD54F;
   static const uint32_t kIconOff = 0xB0B0B0;
   static const uint32_t kIconNeutral = 0xFFFFFF;
   static const uint32_t kSwitchOff = 0xFFFFFF;
   static const uint32_t kSwitchOn = 0x3B82F6;
+  static const uint32_t kActiveBorder = 0xFFD54F;
 
   const bool light_unavailable =
       is_light_entity && !state.available;
@@ -1760,6 +1763,30 @@ void update_switch_tile_state(GridType grid_type, uint8_t grid_index, const char
     lv_obj_set_style_text_color(widgets.icon_label, lv_color, 0);
   } else if (widgets.title_label) {
     lv_obj_set_style_text_color(widgets.title_label, lv_color, 0);
+  }
+
+  if (widgets.container) {
+    const uint32_t tile_color = tileBgColorOrDefault(tile, 0x2A2A2A);
+    const bool tile_active =
+        !light_unavailable && state.has_state && state.is_on;
+    const uint32_t background_color =
+        tile_active ? brighten_rgb_color(tile_color, 0x12) : tile_color;
+
+    lv_obj_set_style_bg_color(
+        widgets.container, lv_color_hex(background_color),
+        LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_color(
+        widgets.container, lv_color_hex(background_color),
+        LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(
+        widgets.container, lv_color_hex(kActiveBorder), LV_PART_MAIN);
+    lv_obj_set_style_border_opa(
+        widgets.container, tile_active ? LV_OPA_COVER : LV_OPA_TRANSP,
+        LV_PART_MAIN);
+    lv_obj_set_style_border_width(
+        widgets.container,
+        tile_active ? tile_layout::scale_480(4) : 0,
+        LV_PART_MAIN);
   }
 
   if (widgets.switch_obj) {

@@ -203,6 +203,9 @@ jobs:
       - name: Verify ESP32-P4 folder-cache scope
         run: node tools/test-p4-folder-cache-scope.mjs
 
+      - name: Verify active Switch tile highlight
+        run: node tools/test-switch-active-highlight.mjs
+
       - name: Restore Arduino cache
         uses: actions/cache@v4
         with:
