@@ -1764,14 +1764,30 @@ void update_switch_tile_state(GridType grid_type, uint8_t grid_index, const char
     lv_obj_set_style_text_color(widgets.title_label, lv_color, 0);
   }
 
-  if (widgets.container) {
+  // Widget caches can restore a container pointer that predates the currently
+  // rendered grid. The icon/title pointer is already the authoritative object
+  // used above, so resolve the live tile container from that same object.
+  lv_obj_t* live_container = nullptr;
+  if (widgets.icon_label && lv_obj_is_valid(widgets.icon_label)) {
+    live_container = lv_obj_get_parent(widgets.icon_label);
+  } else if (widgets.title_label && lv_obj_is_valid(widgets.title_label)) {
+    live_container = lv_obj_get_parent(widgets.title_label);
+  } else if (widgets.switch_obj && lv_obj_is_valid(widgets.switch_obj)) {
+    live_container = lv_obj_get_parent(widgets.switch_obj);
+  } else if (widgets.container && lv_obj_is_valid(widgets.container)) {
+    live_container = widgets.container;
+  }
+
+  if (live_container) {
+    widgets.container = live_container;
     const bool tile_active =
         !light_unavailable && state.has_state && state.is_on;
     if (tile_active) {
-      lv_obj_add_state(widgets.container, LV_STATE_CHECKED);
+      lv_obj_add_state(live_container, LV_STATE_CHECKED);
     } else {
-      lv_obj_remove_state(widgets.container, LV_STATE_CHECKED);
+      lv_obj_remove_state(live_container, LV_STATE_CHECKED);
     }
+    lv_obj_invalidate(live_container);
   }
 
   if (widgets.switch_obj) {

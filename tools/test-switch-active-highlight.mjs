@@ -11,8 +11,10 @@ const required = [
   [switchRenderer, 'brighten_rgb_color(tile_color, 0x12)'],
   [switchRenderer, 'LV_PART_MAIN | LV_STATE_CHECKED'],
   [switchRenderer, 'lv_obj_set_style_border_color('],
-  [renderer, 'lv_obj_add_state(widgets.container, LV_STATE_CHECKED)'],
-  [renderer, 'lv_obj_remove_state(widgets.container, LV_STATE_CHECKED)'],
+  [renderer, 'lv_obj_get_parent(widgets.icon_label)'],
+  [renderer, 'lv_obj_add_state(live_container, LV_STATE_CHECKED)'],
+  [renderer, 'lv_obj_remove_state(live_container, LV_STATE_CHECKED)'],
+  [renderer, 'lv_obj_invalidate(live_container)'],
 ];
 
 for (const [source, snippet] of required) {
