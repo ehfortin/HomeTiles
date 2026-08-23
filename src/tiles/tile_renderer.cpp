@@ -1782,11 +1782,28 @@ void update_switch_tile_state(GridType grid_type, uint8_t grid_index, const char
     widgets.container = live_container;
     const bool tile_active =
         !light_unavailable && state.has_state && state.is_on;
-    if (tile_active) {
-      lv_obj_add_state(live_container, LV_STATE_CHECKED);
-    } else {
-      lv_obj_remove_state(live_container, LV_STATE_CHECKED);
-    }
+    const uint32_t tile_color = tileBgColorOrDefault(tile, 0x2A2A2A);
+    const uint32_t background_color =
+        tile_active ? brighten_rgb_color(tile_color, 0x12) : tile_color;
+
+    // Apply the active appearance directly to the live container, just as the
+    // icon color is applied directly above. This avoids LVGL state selectors
+    // being restored or superseded during press/release and grid-cache cycles.
+    lv_obj_set_style_bg_color(
+        live_container, lv_color_hex(background_color),
+        LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_grad_color(
+        live_container, lv_color_hex(background_color),
+        LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(
+        live_container, lv_color_hex(0xFFD54F),
+        LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(
+        live_container, tile_active ? LV_OPA_COVER : LV_OPA_TRANSP,
+        LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(
+        live_container, tile_active ? tile_layout::scale_480(4) : 0,
+        LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_invalidate(live_container);
   }
 
