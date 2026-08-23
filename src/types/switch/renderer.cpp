@@ -147,6 +147,10 @@ lv_obj_set_style_bg_grad_dir(container, LV_GRAD_DIR_NONE, LV_PART_MAIN | LV_STAT
     lv_obj_add_flag(container, LV_OBJ_FLAG_CLICKABLE);
   }
   lv_obj_remove_flag(container, LV_OBJ_FLAG_SCROLLABLE);
+  // Touch tiles do not need a persistent keyboard-style focus state. Keeping
+  // CLICK_FOCUSABLE enabled lets LVGL's focused theme override the active
+  // border after a tap, even though the entity and icon update correctly.
+  lv_obj_remove_flag(container, LV_OBJ_FLAG_CLICK_FOCUSABLE);
   if (!use_switch_widget) disable_pressed_button_animation(container);
 
   set_tile_grid_cell(container, col, row, tile.span_w, tile.span_h);

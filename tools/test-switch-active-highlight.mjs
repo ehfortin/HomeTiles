@@ -7,6 +7,7 @@ const switchRenderer = fs.readFileSync('src/types/switch/renderer.cpp', 'utf8');
 const required = [
   [header, 'lv_obj_t* container = nullptr;'],
   [switchRenderer, 'target[index].container = container;'],
+  [switchRenderer, 'lv_obj_remove_flag(container, LV_OBJ_FLAG_CLICK_FOCUSABLE)'],
   [renderer, 'state.has_state && state.is_on'],
   [renderer, 'lv_obj_get_parent(widgets.icon_label)'],
   [renderer, 'brighten_rgb_color(tile_color, 0x12)'],
